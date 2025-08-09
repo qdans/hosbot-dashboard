@@ -1,37 +1,11 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
-import { notFound } from "next/navigation";
 import supabase from "@/app/utils/supabaseClient";
 import SettingsForm from "@/app/components/SettingsForm";
-
-type Guild = {
-  id: string;
-  name: string;
-  icon: string | null;
-  owner: boolean;
-  permissions: string;
-};
 
 type Channel = {
   id: string;
   name: string;
   type: number;
 };
-
-async function checkAdminPermissions(accessToken: string, guildId: string): Promise<boolean> {
-    const response = await fetch("https://discord.com/api/users/@me/guilds", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!response.ok) return false;
-
-    const guilds: Guild[] = await response.json();
-    const currentGuild = guilds.find(g => g.id === guildId);
-
-    if (!currentGuild) return false;
-
-    const permissions = BigInt(currentGuild.permissions);
-    return (permissions & BigInt(0x8)) === BigInt(0x8);
-}
 
 async function getGuildSettings(guildId: string) {
     const { data, error } = await supabase
@@ -53,41 +27,26 @@ async function getGuildSettings(guildId: string) {
 
 async function getGuildChannels(guildId: string): Promise<Channel[]> {
     const response = await fetch(`${process.env.NEXTAUTH_URL}/api/guilds/${guildId}/channels`);
-    if(!response.ok) return [];
+    if(!response.ok) {
+        console.error(`Failed to fetch channels for guild ${guildId}`);
+        return [];
+    }
     return response.json();
 }
 
-export default async function ServerDashboardPage({ params }: { params: { guildId: string } }) {
-    const session = await getServerSession(authOptions);
+export default async function SettingsPage({ params }: { params: { guildId: string } }) {
     const { guildId } = params;
 
-    if (!session || !session.accessToken) {
-        return notFound();
-    }
-
-    const [isAdmin, settings, channels] = await Promise.all([
-        checkAdminPermissions(session.accessToken, guildId),
+    const [settings, channels] = await Promise.all([
         getGuildSettings(guildId),
         getGuildChannels(guildId)
     ]);
-    
-    if (!isAdmin) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
-                <h1 className="text-2xl">You do not have permission to view this page.</h1>
-            </div>
-        );
-    }
 
     return (
-        <main className="flex min-h-screen flex-col items-center p-8 bg-gray-900 text-white">
-            <div className="w-full max-w-4xl p-8 rounded-xl bg-gray-800 shadow-2xl">
-                <h1 className="text-4xl font-bold mb-6">Server Settings</h1>
-                <p className="text-gray-400 mb-8">
-                    Configure Hosbot for your server. Changes saved here will be instantly applied.
-                </p>
-                {settings && <SettingsForm initialSettings={settings} guildId={guildId} channels={channels} />}
-            </div>
-        </main>
+        <div>
+            <h1 className="text-3xl font-bold mb-6">General Settings</h1>
+            {/* We render the form only if settings are available, passing the data down */}
+            {settings && <SettingsForm initialSettings={settings} guildId={guildId} channels={channels} />}
+        </div>
     );
 }
