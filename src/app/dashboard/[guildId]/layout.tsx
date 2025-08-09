@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import NavLink from "@/app/components/NavLink";
 
 type Guild = {
@@ -41,6 +42,7 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen flex-col items-center p-8 bg-gray-900 text-white">
       <div className="w-full max-w-6xl">
+        {/* Server Header */}
         <div className="flex items-center gap-4 mb-6">
           {guild.icon ? (
             <Image
@@ -58,11 +60,13 @@ export default async function DashboardLayout({
           <h1 className="text-4xl font-bold">{guild.name}</h1>
         </div>
 
+        {/* Navigation Tabs */}
         <div className="flex border-b border-gray-700 mb-8">
           <NavLink href={`/dashboard/${params.guildId}`}>Settings</NavLink>
           <NavLink href={`/dashboard/${params.guildId}/members`}>Members</NavLink>
         </div>
-        
+
+        {/* Page Content */}
         <div className="p-8 rounded-xl bg-gray-800 shadow-2xl">
           {children}
         </div>
