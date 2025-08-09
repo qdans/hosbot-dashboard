@@ -1,5 +1,5 @@
 import { AuthOptions } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
+import DiscordProvider, { DiscordProfile } from "next-auth/providers/discord";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -10,15 +10,22 @@ export const authOptions: AuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, profile }) {
       if (account) {
         token.accessToken = account.access_token;
+      }
+      if (profile) {
+        const discordProfile = profile as DiscordProfile;
+        token.id = discordProfile.id;
+        token.tag = `${discordProfile.username}#${discordProfile.discriminator}`;
       }
       return token;
     },
     async session({ session, token }) {
       if(session.user){
          session.accessToken = token.accessToken as string;
+         session.user.id = token.id;
+         session.user.tag = token.tag;
       }
       return session;
     },
