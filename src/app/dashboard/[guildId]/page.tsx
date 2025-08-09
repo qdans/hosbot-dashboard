@@ -26,9 +26,13 @@ async function getGuildSettings(guildId: string) {
 }
 
 async function getGuildChannels(guildId: string): Promise<Channel[]> {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/guilds/${guildId}/channels`);
+    const response = await fetch(`https://discord.com/api/guilds/${guildId}/channels`, {
+        headers: { Authorization: `Bot ${process.env.DISCORD_TOKEN}` },
+        next: { revalidate: 60 }
+    });
     if(!response.ok) return [];
-    return response.json();
+    const allChannels: Channel[] = await response.json();
+    return allChannels.filter(c => c.type === 0);
 }
 
 export default async function SettingsPage({ params }: { params: { guildId: string } }) {
