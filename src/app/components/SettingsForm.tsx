@@ -7,6 +7,7 @@ interface Settings {
     welcome_message_text: string | null;
     welcome_channel_id: string | null;
     welcome_message_enabled: boolean | null;
+    log_channel_id: string | null;
 }
 
 interface Channel {
@@ -37,7 +38,6 @@ export default function SettingsForm({ initialSettings, guildId, channels }: { i
             <div className="p-4 rounded-lg bg-gray-700/50 mb-6">
                 <h3 className="text-xl font-semibold mb-4 text-white">Welcome Message</h3>
                 
-                {/* Toggle Switch */}
                 <div className="flex items-center justify-between mb-4">
                     <label htmlFor="welcome_enabled" className="text-sm font-medium text-gray-300">
                         Enable Welcome Messages
@@ -54,7 +54,6 @@ export default function SettingsForm({ initialSettings, guildId, channels }: { i
                     </label>
                 </div>
 
-                {/* Channel Selector */}
                 <div className="mb-4">
                     <label htmlFor="welcome_channel" className="block mb-2 text-sm font-medium text-gray-300">
                         Welcome Channel
@@ -72,7 +71,6 @@ export default function SettingsForm({ initialSettings, guildId, channels }: { i
                     </select>
                 </div>
                 
-                {/* Welcome Message Text */}
                 <div>
                     <label htmlFor="welcome_message" className="block mb-2 text-sm font-medium text-gray-300">
                         Welcome Message Text
@@ -85,6 +83,30 @@ export default function SettingsForm({ initialSettings, guildId, channels }: { i
                         placeholder="Welcome {user} to {server}! Use {username} for their tag."
                         defaultValue={initialSettings.welcome_message_text || ''}
                     />
+                </div>
+            </div>
+
+            {/* Moderation Log Settings */}
+            <div className="p-4 rounded-lg bg-gray-700/50 mb-6">
+                <h3 className="text-xl font-semibold mb-4 text-white">Moderation Logs</h3>
+                <div className="mb-4">
+                    <label htmlFor="log_channel" className="block mb-2 text-sm font-medium text-gray-300">
+                        Log Channel
+                    </label>
+                    <select
+                        id="log_channel"
+                        name="log_channel"
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                        defaultValue={initialSettings.log_channel_id || ''}
+                    >
+                        <option value="">Disable Logging</option>
+                        {channels.map(channel => (
+                            <option key={channel.id} value={channel.id}># {channel.name}</option>
+                        ))}
+                    </select>
+                    <p className="mt-2 text-xs text-gray-400">
+                        All moderation actions (kick, ban, mute) will be logged in this channel.
+                    </p>
                 </div>
             </div>
 

@@ -6,6 +6,7 @@ export async function updateGuildSettings(guildId: string, formData: FormData) {
     const welcomeMessage = formData.get('welcome_message') as string;
     const welcomeChannelId = formData.get('welcome_channel') as string | null;
     const welcomeEnabled = formData.get('welcome_enabled') === 'on';
+    const logChannelId = formData.get('log_channel') as string | null;
 
     const { error } = await supabase
         .from('guild_settings')
@@ -14,6 +15,7 @@ export async function updateGuildSettings(guildId: string, formData: FormData) {
             welcome_message_text: welcomeMessage,
             welcome_channel_id: welcomeChannelId,
             welcome_message_enabled: welcomeEnabled,
+            log_channel_id: logChannelId,
         }, {
             onConflict: 'guild_id'
         });
