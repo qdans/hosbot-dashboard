@@ -1,7 +1,11 @@
 import supabase from "@/app/utils/supabaseClient";
 import SettingsForm from "@/app/components/SettingsForm";
 
-type Channel = { id: string; name: string; };
+type Channel = {
+  id: string;
+  name: string;
+  type: number;
+};
 
 async function getGuildSettings(guildId: string) {
     const { data, error } = await supabase
@@ -21,9 +25,22 @@ async function getGuildSettings(guildId: string) {
     return data;
 }
 
-export default async function SettingsPage({ params, channels }: { params: { guildId: string }, channels: Channel[] }) {
+async function getGuildChannels(guildId: string): Promise<Channel[]> {
+    const response = await fetch(`https://discord.com/api/guilds/${guildId}/channels`, {
+        headers: { Authorization: `Bot ${process.env.DISCORD_TOKEN}` },
+        next: { revalidate: 60 }
+    });
+    if(!response.ok) return [];
+    const allChannels: Channel[] = await response.json();
+    return allChannels.filter(c => c.type === 0);
+}
+
+export default async function SettingsPage({ params }: { params: { guildId: string } }) {
     const { guildId } = params;
-    const settings = await getGuildSettings(guildId);
+    const [settings, channels] = await Promise.all([
+        getGuildSettings(guildId),
+        getGuildChannels(guildId)
+    ]);
 
     return (
         <div>
