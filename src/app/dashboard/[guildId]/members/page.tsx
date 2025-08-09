@@ -1,23 +1,15 @@
 import Image from 'next/image';
 
-type User = {
-    id: string;
-    username: string;
-    discriminator: string;
-    avatar: string | null;
-};
-
-type Member = {
-    user: User;
-    roles: string[];
-    joined_at: string;
-    nick: string | null;
-};
+type User = { id: string; username: string; discriminator: string; avatar: string | null; };
+type Member = { user: User; roles: string[]; joined_at: string; nick: string | null; };
 
 async function getGuildMembers(guildId: string): Promise<Member[]> {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/guilds/${guildId}/members`);
-    if(!response.ok) {
-        console.error("Failed to fetch members for page");
+    const response = await fetch(`https://discord.com/api/guilds/${guildId}/members?limit=1000`, {
+        headers: { Authorization: `Bot ${process.env.DISCORD_TOKEN}` },
+        next: { revalidate: 60 }
+    });
+    if (!response.ok) {
+        console.error("Failed to fetch members directly:", await response.text());
         return [];
     };
     return response.json();
@@ -28,7 +20,7 @@ export default async function MembersPage({ params }: { params: { guildId: strin
 
     return (
         <div>
-            <h1 className="text-3xl font-bold mb-6">Server Members</h1>
+            <h1 className="text-3xl font-bold mb-6">Server Members ({members.length})</h1>
             <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
                 <table className="w-full text-sm text-left text-gray-400">
                     <thead className="text-xs uppercase bg-gray-700 text-gray-400">
@@ -42,8 +34,8 @@ export default async function MembersPage({ params }: { params: { guildId: strin
                         {members.map((member) => (
                             <tr key={member.user.id} className="border-b bg-gray-800 border-gray-700 hover:bg-gray-600">
                                 <th scope="row" className="flex items-center px-6 py-4 whitespace-nowrap text-white">
-                                    <Image 
-                                        className="w-10 h-10 rounded-full" 
+                                    <Image
+                                        className="w-10 h-10 rounded-full"
                                         src={member.user.avatar ? `https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'}
                                         alt={`${member.user.username} avatar`}
                                         width={40}
@@ -52,7 +44,7 @@ export default async function MembersPage({ params }: { params: { guildId: strin
                                     <div className="pl-3">
                                         <div className="text-base font-semibold">{member.nick || member.user.username}</div>
                                         <div className="font-normal text-gray-500">{member.user.username}#{member.user.discriminator}</div>
-                                    </div>  
+                                    </div>
                                 </th>
                                 <td className="px-6 py-4">
                                     <code>{member.user.id}</code>

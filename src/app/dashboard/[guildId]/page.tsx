@@ -1,11 +1,7 @@
 import supabase from "@/app/utils/supabaseClient";
 import SettingsForm from "@/app/components/SettingsForm";
 
-type Channel = {
-  id: string;
-  name: string;
-  type: number;
-};
+type Channel = { id: string; name: string; };
 
 async function getGuildSettings(guildId: string) {
     const { data, error } = await supabase
@@ -25,27 +21,13 @@ async function getGuildSettings(guildId: string) {
     return data;
 }
 
-async function getGuildChannels(guildId: string): Promise<Channel[]> {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/guilds/${guildId}/channels`);
-    if(!response.ok) {
-        console.error(`Failed to fetch channels for guild ${guildId}`);
-        return [];
-    }
-    return response.json();
-}
-
-export default async function SettingsPage({ params }: { params: { guildId: string } }) {
+export default async function SettingsPage({ params, channels }: { params: { guildId: string }, channels: Channel[] }) {
     const { guildId } = params;
-
-    const [settings, channels] = await Promise.all([
-        getGuildSettings(guildId),
-        getGuildChannels(guildId)
-    ]);
+    const settings = await getGuildSettings(guildId);
 
     return (
         <div>
             <h1 className="text-3xl font-bold mb-6">General Settings</h1>
-            {/* We render the form only if settings are available, passing the data down */}
             {settings && <SettingsForm initialSettings={settings} guildId={guildId} channels={channels} />}
         </div>
     );
